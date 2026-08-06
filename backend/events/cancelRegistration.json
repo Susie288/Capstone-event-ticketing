@@ -1,0 +1,6 @@
+{
+  "httpMethod": "DELETE",
+  "path": "/registration/registration-id",
+  "pathParameters": {"id": "registration-id"}
+}
+

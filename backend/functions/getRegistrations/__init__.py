@@ -1,0 +1,1 @@
+"""Get registrations Lambda package."""
