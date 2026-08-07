@@ -1,0 +1,383 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless infrastructure for the event ticketing system.
+
+Parameters:
+  AllowedOrigin:
+    Type: String
+    Default: "https://d1zmqwzh6agine.cloudfront.net"
+    Description: Exact frontend origin allowed to call the API.
+
+Globals:
+  Function:
+    Runtime: python3.12
+    CodeUri: backend/
+    Timeout: 15
+    MemorySize: 256
+    Environment:
+      Variables:
+        EVENTS_TABLE: !Ref EventsTable
+        REGISTRATIONS_TABLE: !Ref RegistrationsTable
+        EMAIL_INDEX: email-index
+        REGISTRATION_ID_INDEX: registration-id-index
+        ALLOWED_ORIGIN: !Ref AllowedOrigin
+        LOG_LEVEL: INFO
+
+Resources:
+
+  EventTicketingApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - !Ref AllowedOrigin
+        AllowMethods:
+          - GET
+          - POST
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - content-type
+          - authorization
+
+
+  EventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AWS::StackName}-events'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: event_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: event_id
+          KeyType: HASH
+
+
+  RegistrationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AWS::StackName}-registrations'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: event_id
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: registration_id
+          AttributeType: S
+
+      KeySchema:
+        - AttributeName: event_id
+          KeyType: HASH
+        - AttributeName: email
+          KeyType: RANGE
+
+      GlobalSecondaryIndexes:
+        - IndexName: email-index
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+        - IndexName: registration-id-index
+          KeySchema:
+            - AttributeName: registration_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+
+  FrontendOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${AWS::StackName}-frontend-oac'
+        Description: Grants CloudFront signed access to private S3 bucket.
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+
+  FrontendDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+
+        Enabled: true
+        DefaultRootObject: index.html
+        PriceClass: PriceClass_100
+
+        Origins:
+          - Id: FrontendS3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt FrontendOriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+
+        DefaultCacheBehavior:
+          TargetOriginId: FrontendS3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+
+      PolicyDocument:
+
+        Version: '2012-10-17'
+
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipalReadOnly
+
+            Effect: Allow
+
+            Principal:
+              Service: cloudfront.amazonaws.com
+
+            Action:
+              - s3:GetObject
+
+            Resource:
+              !Sub '${FrontendBucket.Arn}/*'
+
+            Condition:
+
+              StringEquals:
+
+                AWS:SourceArn:
+                  !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}'
+
+
+
+  GetEventsFunction:
+    Type: AWS::Serverless::Function
+
+    Properties:
+
+      FunctionName: event-ticketing-get-events
+
+      Handler: functions.getEvents.lambda_function.lambda_handler
+
+      Policies:
+
+        - AWSLambdaBasicExecutionRole
+
+        - Statement:
+
+            Effect: Allow
+
+            Action:
+
+              - dynamodb:GetItem
+              - dynamodb:Scan
+              - dynamodb:Query
+
+            Resource:
+
+              - !GetAtt EventsTable.Arn
+
+
+      Events:
+
+        GetEvents:
+
+          Type: HttpApi
+
+          Properties:
+
+            ApiId: !Ref EventTicketingApi
+
+            Path: /events
+
+            Method: GET
+
+
+  RegisterFunction:
+    Type: AWS::Serverless::Function
+
+    Properties:
+
+      FunctionName: event-ticketing-register
+
+      Handler: functions.register.lambda_function.lambda_handler
+
+      Policies:
+
+        - AWSLambdaBasicExecutionRole
+
+        - Statement:
+
+            Effect: Allow
+
+            Action:
+
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:ConditionCheckItem
+              - dynamodb:TransactWriteItems
+
+            Resource:
+
+              - !GetAtt EventsTable.Arn
+
+              - !GetAtt RegistrationsTable.Arn
+
+
+      Events:
+
+        Register:
+
+          Type: HttpApi
+
+          Properties:
+
+            ApiId: !Ref EventTicketingApi
+
+            Path: /register
+
+            Method: POST
+
+
+        RegisterFrontendAlias:
+
+          Type: HttpApi
+
+          Properties:
+
+            ApiId: !Ref EventTicketingApi
+
+            Path: /registrations
+
+            Method: POST
+
+
+  CancelRegistrationFunction:
+
+    Type: AWS::Serverless::Function
+
+    Properties:
+
+      FunctionName: event-ticketing-cancel-registration
+
+      Handler: functions.cancelRegistration.lambda_function.lambda_handler
+
+
+      Policies:
+
+        - AWSLambdaBasicExecutionRole
+
+        - Statement:
+
+            Effect: Allow
+
+            Action:
+
+              - dynamodb:UpdateItem
+
+            Resource:
+
+              - !GetAtt RegistrationsTable.Arn
+
+
+      Events:
+
+        CancelRegistration:
+
+          Type: HttpApi
+
+          Properties:
+
+            ApiId: !Ref EventTicketingApi
+
+            Path: /registration/{id}
+
+            Method: DELETE
+
+
+
+Outputs:
+
+  ApiUrl:
+
+    Description: API Gateway endpoint URL.
+
+    Value:
+      !Sub 'https://${EventTicketingApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}'
+
+
+  EventsTableName:
+
+    Description: Events DynamoDB table name.
+
+    Value:
+      !Ref EventsTable
+
+
+  RegistrationsTableName:
+
+    Description: Registrations DynamoDB table name.
+
+    Value:
+      !Ref RegistrationsTable
+
+
+  FrontendBucketName:
+
+    Description: Private S3 bucket for uploaded frontend files.
+
+    Value:
+      !Ref FrontendBucket
+
+
+  FrontendUrl:
+
+    Description: CloudFront URL for frontend.
+
+    Value:
+      !Sub 'https://${FrontendDistribution.DomainName}'

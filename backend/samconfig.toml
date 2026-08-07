@@ -1,0 +1,14 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "event-ticketing-system"
+resolve_s3 = true
+s3_prefix = "event-ticketing-system"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "AllowedOrigin=\"https://d1zmqwzh6agine.cloudfront.net\""
+image_repositories = []
+
+[default.global.parameters]
+region = "us-east-1"
