@@ -1,0 +1,6 @@
+{
+  "httpMethod": "GET",
+  "path": "/events",
+  "pathParameters": null
+}
+

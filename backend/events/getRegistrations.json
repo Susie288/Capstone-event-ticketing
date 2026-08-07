@@ -1,0 +1,6 @@
+{
+  "httpMethod": "GET",
+  "path": "/registrations/ada@example.com",
+  "pathParameters": {"email": "ada@example.com"}
+}
+
