@@ -10,12 +10,19 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      id-token: write
       contents: read
 
     steps:
+      # -------------------------
+      # Checkout Repository
+      # -------------------------
+
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      # -------------------------
+      # Configure AWS
+      # -------------------------
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -67,7 +74,7 @@ jobs:
         run: npm run build
 
       # -------------------------
-      # Upload to S3
+      # Upload Frontend to S3
       # -------------------------
 
       - name: Upload Frontend to S3
@@ -81,5 +88,5 @@ jobs:
       - name: Invalidate CloudFront Cache
         run: |
           aws cloudfront create-invalidation \
-          --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-          --paths "/*"
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
