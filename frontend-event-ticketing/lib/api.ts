@@ -1,9 +1,9 @@
 import axios from "axios";
 import { EventItem, RegistrationPayload, RegistrationResponse } from "@/types";
 import { MOCK_EVENTS } from "@/lib/mock-data";
-import { generateRegistrationId } from "@/lib/utils";
+import { calculateEventStatus, generateRegistrationId } from "@/lib/utils";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").trim();
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -32,7 +32,7 @@ export const apiClient = axios.create({
  *
  * Backend payload:
  * {
- *   event_id,
+ *   eventId,
  *   fullName,
  *   email,
  *   phone
@@ -108,6 +108,10 @@ export async function submitRegistration(
     if (event.status === "SOLD_OUT") {
       throw new Error("This event is sold out.");
     }
+
+    // Decrement mock seat count so the same session stays consistent
+    event.availableSeats = Math.max(0, event.availableSeats - 1);
+    event.status = calculateEventStatus(event.availableSeats, event.totalSeats);
 
     return {
       registrationId: generateRegistrationId(),

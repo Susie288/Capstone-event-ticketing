@@ -83,7 +83,7 @@ export function RegistrationForm({ events, isLoadingEvents, presetEventId, onSuc
                     <SelectContent>
                       {events.map((event) => (
                         <SelectItem key={event.id} value={event.id} disabled={event.status === "SOLD_OUT"}>
-                          {event.name} {event.status === "SOLD_OUT" ? "· Sold out" : ""}
+                          {event.name} · {event.status === "SOLD_OUT" ? "Sold out" : `${event.availableSeats} seats left`}
                         </SelectItem>
                       ))}
                     </SelectContent>

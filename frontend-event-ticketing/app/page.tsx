@@ -13,7 +13,7 @@ import { useEvents } from "@/hooks/use-events";
 import { EventItem, RegistrationResponse } from "@/types";
 
 export default function Home() {
-  const { events, isLoading, error, refetch } = useEvents();
+  const { events, isLoading, error, refetch, updateEventSeats } = useEvents();
 
   const [presetEventId, setPresetEventId] = useState<string | undefined>(undefined);
   const [registration, setRegistration] = useState<RegistrationResponse | null>(null);
@@ -39,7 +39,7 @@ export default function Home() {
     <div className="min-h-screen">
       <Navbar />
       <main>
-        <Hero />
+        <Hero events={events} />
 
         <section id="register" className="container py-20 md:py-28">
           <div className="mx-auto grid max-w-5xl gap-12 md:grid-cols-[1fr_1.1fr] md:items-center">
@@ -86,7 +86,10 @@ export default function Home() {
                       events={events}
                       isLoadingEvents={isLoading}
                       presetEventId={presetEventId}
-                      onSuccess={(data) => setRegistration(data)}
+                      onSuccess={(data) => {
+                        updateEventSeats(data.eventId);
+                        setRegistration(data);
+                      }}
                     />
                   </motion.div>
                 )}

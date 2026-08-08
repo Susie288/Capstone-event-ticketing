@@ -3,12 +3,23 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EventItem } from "@/types";
 
 function scrollTo(href: string) {
   document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
 }
 
-export function Hero() {
+interface HeroProps {
+  events?: EventItem[];
+}
+
+export function Hero({ events = [] }: HeroProps) {
+  const liveEventsCount = events.length > 0 ? events.length : 4;
+  const reservedSeats = events.length > 0
+    ? events.reduce((sum, e) => sum + Math.max(0, e.totalSeats - e.availableSeats), 0)
+    : 600;
+  const seatsDisplay = events.length > 0 ? `${reservedSeats}` : "600+";
+
   return (
     <section id="top" className="relative overflow-hidden">
       <div className="absolute inset-0 bg-grid [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,black_10%,transparent_70%)]" />
@@ -49,8 +60,8 @@ export function Hero() {
           </div>
 
           <div className="mt-10 flex items-center justify-center gap-8 md:justify-start">
-            <Stat value="4" label="Live events" />
-            <Stat value="600+" label="Seats issued" />
+            <Stat value={String(liveEventsCount)} label="Live events" />
+            <Stat value={seatsDisplay} label="Seats reserved" />
             <Stat value="< 60s" label="To register" />
           </div>
         </motion.div>

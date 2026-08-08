@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { EventItem } from "@/types";
 import { fetchEvents } from "@/lib/api";
+import { calculateEventStatus } from "@/lib/utils";
 
 export function useEvents() {
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -22,9 +23,21 @@ export function useEvents() {
     }
   }, []);
 
+  /** Optimistically decrement available seats for a given event after registration. */
+  const updateEventSeats = useCallback((eventId: string) => {
+    setEvents((prev) =>
+      prev.map((event) => {
+        if (event.id !== eventId) return event;
+        const newAvailable = Math.max(0, event.availableSeats - 1);
+        const status = calculateEventStatus(newAvailable, event.totalSeats);
+        return { ...event, availableSeats: newAvailable, status };
+      })
+    );
+  }, []);
+
   useEffect(() => {
     load();
   }, [load]);
 
-  return { events, isLoading, error, refetch: load };
+  return { events, isLoading, error, refetch: load, updateEventSeats };
 }
