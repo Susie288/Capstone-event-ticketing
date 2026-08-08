@@ -24,5 +24,21 @@ class Registration:
 
     @classmethod
     def from_item(cls, item: dict[str, Any]) -> "Registration":
-        return cls(**{field: item.get(field, "") for field in cls.__dataclass_fields__})
+        required_fields = {
+            "registration_id", "event_id", "event_name", "full_name",
+            "email", "status", "created_at"
+        }
+        missing = [f for f in required_fields if f not in item or item[f] is None]
+        if missing:
+            raise ValueError(f"Missing required registration fields: {', '.join(missing)}")
+        return cls(
+            registration_id=str(item["registration_id"]),
+            event_id=str(item["event_id"]),
+            event_name=str(item["event_name"]),
+            full_name=str(item["full_name"]),
+            email=str(item["email"]),
+            phone=str(item.get("phone") or ""),
+            status=str(item["status"]),
+            created_at=str(item["created_at"]),
+        )
 

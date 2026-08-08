@@ -8,6 +8,14 @@ Parameters:
     Default: "https://d1zmqwzh6agine.cloudfront.net"
     Description: Exact frontend origin allowed to call the API.
 
+  NotificationEmail:
+    Type: String
+    Default: ""
+    Description: Optional email address to receive SNS registration notifications.
+
+Conditions:
+  HasNotificationEmail: !Not [!Equals [!Ref NotificationEmail, ""]]
+
 Globals:
   Function:
     Runtime: python3.12
@@ -21,6 +29,7 @@ Globals:
         EMAIL_INDEX: email-index
         REGISTRATION_ID_INDEX: registration-id-index
         ALLOWED_ORIGIN: !Ref AllowedOrigin
+        REGISTRATION_TOPIC_ARN: !Ref RegistrationTopic
         LOG_LEVEL: INFO
 
 Resources:
@@ -189,9 +198,18 @@ Resources:
 
               StringEquals:
 
-                AWS:SourceArn:
-                  !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}'
+  RegistrationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${AWS::StackName}-registration-topic'
 
+  EmailSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasNotificationEmail
+    Properties:
+      TopicArn: !Ref RegistrationTopic
+      Protocol: email
+      Endpoint: !Ref NotificationEmail
 
 
   GetEventsFunction:
@@ -268,6 +286,18 @@ Resources:
 
               - !GetAtt RegistrationsTable.Arn
 
+        - Statement:
+
+            Effect: Allow
+
+            Action:
+
+              - sns:Publish
+
+            Resource:
+
+              - !Ref RegistrationTopic
+
 
       Events:
 
@@ -340,6 +370,28 @@ Resources:
             Method: DELETE
 
 
+  GetRegistrationsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: event-ticketing-get-registrations
+      Handler: functions.getRegistrations.lambda_function.lambda_handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            Effect: Allow
+            Action:
+              - dynamodb:Query
+            Resource:
+              - !GetAtt RegistrationsTable.Arn
+              - !Sub '${RegistrationsTable.Arn}/index/email-index'
+      Events:
+        GetRegistrations:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref EventTicketingApi
+            Path: /registrations/{email}
+            Method: GET
+
 
 Outputs:
 
@@ -381,3 +433,11 @@ Outputs:
 
     Value:
       !Sub 'https://${FrontendDistribution.DomainName}'
+
+
+  RegistrationTopicArn:
+
+    Description: SNS Topic ARN for event registration notifications.
+
+    Value:
+      !Ref RegistrationTopic

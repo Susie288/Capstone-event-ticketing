@@ -75,10 +75,6 @@ class RegistrationRepository:
             )
 
         except ClientError as exc:
-            # Temporary debugging output to see the real DynamoDB failure
-            print("DYNAMODB ERROR:")
-            print(exc.response)
-
             reasons = exc.response.get("CancellationReasons", [])
 
             # Registration already exists
@@ -165,7 +161,15 @@ class RegistrationRepository:
             )
 
         except ClientError as exc:
-            raise RegistrationNotFoundError from exc
+            error_code = exc.response.get("Error", {}).get("Code", "")
+            reasons = exc.response.get("CancellationReasons", [])
+
+            if error_code == "ResourceNotFoundException" or (
+                error_code == "TransactionCanceledException"
+                and any(r.get("Code") == "ConditionalCheckFailed" for r in reasons)
+            ):
+                raise RegistrationNotFoundError from exc
+            raise
 
 
 def _serialize(item: dict[str, Any]) -> dict[str, dict[str, str]]:
