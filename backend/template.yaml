@@ -19,7 +19,7 @@ Conditions:
 Globals:
   Function:
     Runtime: python3.12
-    CodeUri: backend/
+    CodeUri: ./
     Timeout: 15
     MemorySize: 256
     Environment:
@@ -48,6 +48,9 @@ Resources:
         AllowHeaders:
           - content-type
           - authorization
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 100
+        ThrottlingRateLimit: 50
 
 
   EventsTable:
@@ -195,8 +198,8 @@ Resources:
               !Sub '${FrontendBucket.Arn}/*'
 
             Condition:
-
               StringEquals:
+                AWS:SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}'
 
   RegistrationTopic:
     Type: AWS::SNS::Topic
@@ -238,6 +241,12 @@ Resources:
             Resource:
 
               - !GetAtt EventsTable.Arn
+
+        - Statement:
+            Effect: Allow
+            Action:
+              - cloudwatch:PutMetricData
+            Resource: "*"
 
 
       Events:
@@ -298,6 +307,12 @@ Resources:
 
               - !Ref RegistrationTopic
 
+        - Statement:
+            Effect: Allow
+            Action:
+              - cloudwatch:PutMetricData
+            Resource: "*"
+
 
       Events:
 
@@ -354,6 +369,12 @@ Resources:
 
               - !GetAtt RegistrationsTable.Arn
 
+        - Statement:
+            Effect: Allow
+            Action:
+              - cloudwatch:PutMetricData
+            Resource: "*"
+
 
       Events:
 
@@ -384,6 +405,11 @@ Resources:
             Resource:
               - !GetAtt RegistrationsTable.Arn
               - !Sub '${RegistrationsTable.Arn}/index/email-index'
+        - Statement:
+            Effect: Allow
+            Action:
+              - cloudwatch:PutMetricData
+            Resource: "*"
       Events:
         GetRegistrations:
           Type: HttpApi
@@ -391,6 +417,139 @@ Resources:
             ApiId: !Ref EventTicketingApi
             Path: /registrations/{email}
             Method: GET
+
+  # CloudWatch Alarms
+  Api5xxErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AWS::StackName}-Api5xxErrorRateAlarm'
+      AlarmDescription: Triggers when HTTP API 5XX errors count exceeds threshold (> 5% error rate).
+      Namespace: AWS/ApiGateway
+      MetricName: 5XXError
+      Dimensions:
+        - Name: ApiId
+          Value: !Ref EventTicketingApi
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  LambdaExecutionErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AWS::StackName}-LambdaExecutionErrorAlarm'
+      AlarmDescription: Triggers when RegisterFunction incurs runtime errors.
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref RegisterFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  FailedRegistrationsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AWS::StackName}-FailedRegistrationsAlarm'
+      AlarmDescription: Triggers when custom metric FailedRegistrations count exceeds 5 in 5 minutes.
+      Namespace: EventTicketingSystem
+      MetricName: FailedRegistrations
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  # CloudWatch Dashboard
+  SystemMonitoringDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub '${AWS::StackName}-OperationalDashboard'
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 0,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "EventTicketingSystem", "ApiRequestCount", "Status", "Success" ],
+                  [ ".", ".", ".", "Error" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "API Request Count (Success vs Error)"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12,
+              "y": 0,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "EventTicketingSystem", "FailedRegistrations" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "Failed Registrations"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 6,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "EventTicketingSystem", "HandlerDuration", "FunctionName", "RegisterFunction" ],
+                  [ "...", "GetEventsFunction" ],
+                  [ "...", "CancelRegistrationFunction" ],
+                  [ "...", "GetRegistrationsFunction" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "Lambda Execution Duration (ms)"
+              }
+            }
+          ]
+        }
+
+  # AWS Budgets Cost Control
+  MonthlyFreeTierBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: !Sub '${AWS::StackName}-MonthlyBudget'
+        BudgetLimit:
+          Amount: 1.0
+          Unit: USD
+        TimeUnit: MONTHLY
+        BudgetType: COST
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !If [HasNotificationEmail, !Ref NotificationEmail, "admin@example.com"]
 
 
 Outputs:

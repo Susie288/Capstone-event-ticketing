@@ -336,32 +336,38 @@ GitHub Actions automates:
 
 ---
 
-## 📊 Monitoring
+## 📊 Monitoring & Observability (Phase 4)
 
-Amazon CloudWatch provides:
+The application incorporates a comprehensive observability suite powered by Amazon CloudWatch:
 
-- Lambda Logs
-- API Logs
-- Metrics
-- Error Tracking
-- Performance Monitoring
-
-CloudWatch Alarms notify administrators when configured thresholds are exceeded.
-
----
-
-## 🔒 Security
-
-- Least-privilege IAM roles
-- HTTPS through CloudFront
-- API Gateway request validation
-- CORS configuration
-- Secure environment variables
-- CloudWatch audit logging
-
-
+- **Custom CloudWatch Metrics (`EventTicketingSystem` namespace)**:
+  - `ApiRequestCount`: Total API calls grouped by `FunctionName` and `Status` (`Success` vs `Error`).
+  - `FailedRegistrations`: Tracks failed event registration attempts with `Reason` dimension (e.g. duplicate email, event sold out, invalid input).
+  - `HandlerDuration`: Measures exact execution duration of each Lambda function in milliseconds.
+- **CloudWatch Alarms**:
+  - `Api5xxErrorAlarm`: Triggers if API 5XX error count reaches 1 in a 5-minute window (> 5% error rate target).
+  - `LambdaExecutionErrorAlarm`: Triggers if `RegisterFunction` encounters unhandled errors.
+  - `FailedRegistrationsAlarm`: Triggers if failed registration attempts exceed 5 within 5 minutes.
+- **Operational Dashboard**:
+  - `OperationalDashboard`: Single-pane CloudWatch Dashboard visualizing API Request Volume, Registration Failure Trends, and Lambda Execution Durations.
+- **Structured JSON Logging**:
+  - Standardized JSON log events via `shared/logger.py` for CloudWatch Logs Insights querying.
 
 ---
+
+## 🔒 Security & Optimization (Phase 4)
+
+- **Input Sanitization & Injection Prevention**:
+  - HTML tag stripping and whitespace trimming on all text inputs (`shared/validators.py`).
+  - UUID format validation for `eventId`.
+  - Field length limits (Name: 80 chars, Email: 254 chars, Phone: 20 chars, Path Params: 256 chars).
+- **API Gateway Rate Limiting**:
+  - Default route throttling configured with `ThrottlingBurstLimit: 100` and `ThrottlingRateLimit: 50` requests/sec to defend against DDoS attacks.
+- **Least-Privilege IAM Policies**:
+  - Scoped DynamoDB operations per function.
+  - Restricted `cloudwatch:PutMetricData` permission for custom metrics.
+- **Cost Optimization & AWS Budgets**:
+  - `AWS::Budgets::Budget` configured with a $1.00 USD monthly threshold and 80% notification triggers to ensure usage stays strictly within the AWS Free Tier.
 
 ## 📚 Documentation
 
