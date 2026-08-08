@@ -29,7 +29,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          aws-region: us-east-1
 
       # -------------------------
       # Deploy Backend
@@ -82,17 +82,19 @@ jobs:
       # -------------------------
 
       - name: Upload Frontend to S3
-        if: ${{ secrets.S3_BUCKET_NAME != '' }}
+        env:
+          S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
         run: |
-          aws s3 sync frontend-event-ticketing/out s3://${{ secrets.S3_BUCKET_NAME }} --delete
+          aws s3 sync frontend-event-ticketing/out s3://$S3_BUCKET --delete
 
       # -------------------------
       # Clear CloudFront Cache
       # -------------------------
 
       - name: Invalidate CloudFront Cache
-        if: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID != '' }}
+        env:
+          DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --distribution-id $DISTRIBUTION_ID \
             --paths "/*"
