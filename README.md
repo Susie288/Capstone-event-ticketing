@@ -24,6 +24,8 @@ The backend is developed using **Python AWS Lambda** functions, exposed through 
 
 ## 🏗️ Architecture
 
+![Event Ticketing System Architecture Diagram](./docs/architecture-diagram.png)
+
 ```
 User
  │

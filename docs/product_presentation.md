@@ -22,6 +22,9 @@ A cloud-native, serverless REST API and web application built on AWS that automa
 ## 🏗️ 2. Architecture & Technical Challenges
 
 ### Architecture Overview
+
+![Event Ticketing System Architecture Diagram](./architecture-diagram.png)
+
 - **Frontend**: Next.js 15 app hosted in an S3 Bucket (`BucketOwnerEnforced`, Private) and served via Amazon CloudFront CDN with Origin Access Control (OAC).
 - **API Gateway**: HTTP API Gateway with CORS policy, path parameters, and default route rate limiting (`100` burst / `50` req/sec).
 - **Compute**: Python 3.12 AWS Lambda functions (`GetEvents`, `Register`, `GetRegistrations`, `CancelRegistration`).
