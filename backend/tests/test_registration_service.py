@@ -31,6 +31,11 @@ class RegistrationServiceTests(unittest.TestCase):
         })
 
         self.assertEqual(res["status"], "CONFIRMED")
+        mock_sns.subscribe.assert_called_once_with(
+            TopicArn="arn:aws:sns:us-east-1:123456789012:test-topic",
+            Protocol="email",
+            Endpoint="john@example.com",
+        )
         mock_sns.publish.assert_called_once()
         _, kwargs = mock_sns.publish.call_args
         self.assertEqual(kwargs["TopicArn"], "arn:aws:sns:us-east-1:123456789012:test-topic")

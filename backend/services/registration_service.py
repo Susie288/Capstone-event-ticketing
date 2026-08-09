@@ -52,6 +52,19 @@ class RegistrationService:
             if self.sns is None:
                 import boto3
                 self.sns = boto3.client("sns")
+
+            # Subscribe attendee's email to the SNS topic for email notification & subscription confirmation
+            if registration.email:
+                try:
+                    self.sns.subscribe(
+                        TopicArn=self.topic_arn,
+                        Protocol="email",
+                        Endpoint=registration.email,
+                    )
+                    log("info", "sns_subscribed", email=registration.email, registration_id=registration.registration_id)
+                except Exception as sub_exc:
+                    log("warning", "sns_subscribe_failed", error=str(sub_exc), email=registration.email)
+
             message = (
                 f"New Event Registration Confirmed!\n\n"
                 f"Event Name: {event_name}\n"
