@@ -1,1 +1,0 @@
-"""Cancel registration Lambda package."""

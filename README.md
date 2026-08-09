@@ -3,7 +3,7 @@
 
 The Event Registration & Ticketing System is a cloud-native web application that enables users to browse events, view event details, and register online. The solution replaces manual registration methods such as Microsoft Forms and Excel with a scalable, secure, and serverless architecture on AWS.
 
-The backend is developed using **Python AWS Lambda** functions, exposed through **Amazon API Gateway**, and deployed using **AWS Serverless Application Model (AWS SAM)**. The frontend is built with **Next.js**, hosted on **Amazon S3**, and distributed globally using **Amazon CloudFront**.
+The backend is developed using **Node.js 20 AWS Lambda** functions, exposed through **Amazon API Gateway**, and deployed using **AWS Serverless Application Model (AWS SAM)**. The frontend is built with **Next.js**, hosted on **Amazon S3**, and distributed globally using **Amazon CloudFront**.
 
 ---
 
@@ -77,7 +77,7 @@ Confirmation Email
 
 ### Backend
 
-- Python 3.12
+- Node.js 20
 - AWS Lambda
 - Amazon API Gateway
 - Amazon DynamoDB
@@ -114,17 +114,20 @@ event-registration-ticketing-system/
 │   └── package.json
 │
 ├── backend/
-│   ├── events/
-│   │   ├── get_events/
-│   │   └── get_event/
-│   │
-│   ├── registrations/
-│   │   └── register/
+│   ├── functions/
+│   │   ├── getEvents/index.js
+│   │   ├── register/index.js
+│   │   ├── getRegistrations/index.js
+│   │   └── cancelRegistration/index.js
 │   │
 │   ├── shared/
+│   ├── models/
+│   ├── repositories/
+│   ├── services/
+│   ├── config/
 │   ├── template.yaml
 │   ├── samconfig.toml
-│   └── requirements.txt
+│   └── package.json
 │
 ├── docs/
 │   ├── api-documentation.md
@@ -222,8 +225,7 @@ Install:
 
 - AWS CLI
 - AWS SAM CLI
-- Python 3.12
-- Node.js 22+
+- Node.js 20+
 - Git
 
 ---
@@ -255,7 +257,7 @@ npm run dev
 ```bash
 cd backend
 
-pip install -r requirements.txt
+npm install
 ```
 
 Build the application
@@ -353,14 +355,14 @@ The application incorporates a comprehensive observability suite powered by Amaz
 - **Operational Dashboard**:
   - `OperationalDashboard`: Single-pane CloudWatch Dashboard visualizing API Request Volume, Registration Failure Trends, and Lambda Execution Durations.
 - **Structured JSON Logging**:
-  - Standardized JSON log events via `shared/logger.py` for CloudWatch Logs Insights querying.
+  - Standardized JSON log events via `shared/logger.js` for CloudWatch Logs Insights querying.
 
 ---
 
 ## 🔒 Security & Optimization (Phase 4)
 
 - **Input Sanitization & Injection Prevention**:
-  - HTML tag stripping and whitespace trimming on all text inputs (`shared/validators.py`).
+  - HTML tag stripping and whitespace trimming on all text inputs (`shared/validators.js`).
   - UUID format validation for `eventId`.
   - Field length limits (Name: 80 chars, Email: 254 chars, Phone: 20 chars, Path Params: 256 chars).
 - **API Gateway Rate Limiting**:
@@ -395,7 +397,7 @@ This project demonstrates practical experience with:
 - CloudWatch Monitoring
 - GitHub Actions CI/CD
 - REST API Design
-- Python Backend Development
+- JavaScript / Node.js Backend Development
 - Next.js Frontend Development
 
 ---

@@ -18,7 +18,7 @@ Conditions:
 
 Globals:
   Function:
-    Runtime: python3.12
+    Runtime: nodejs20.x
     CodeUri: ./
     Timeout: 15
     MemorySize: 256
@@ -222,7 +222,7 @@ Resources:
 
       FunctionName: event-ticketing-get-events
 
-      Handler: functions.getEvents.lambda_function.lambda_handler
+      Handler: functions/getEvents/index.handler
 
       Policies:
 
@@ -271,7 +271,7 @@ Resources:
 
       FunctionName: event-ticketing-register
 
-      Handler: functions.register.lambda_function.lambda_handler
+      Handler: functions/register/index.handler
 
       Policies:
 
@@ -351,7 +351,7 @@ Resources:
 
       FunctionName: event-ticketing-cancel-registration
 
-      Handler: functions.cancelRegistration.lambda_function.lambda_handler
+      Handler: functions/cancelRegistration/index.handler
 
 
       Policies:
@@ -396,7 +396,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: event-ticketing-get-registrations
-      Handler: functions.getRegistrations.lambda_function.lambda_handler
+      Handler: functions/getRegistrations/index.handler
       Policies:
         - AWSLambdaBasicExecutionRole
         - Statement:

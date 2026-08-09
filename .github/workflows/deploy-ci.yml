@@ -35,10 +35,14 @@ jobs:
       # Deploy Backend
       # -------------------------
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Setup Node.js for Backend
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
+          node-version: 20
+
+      - name: Install Backend Dependencies
+        working-directory: backend
+        run: npm ci
 
       - name: Install SAM CLI
         uses: aws-actions/setup-sam@v2
@@ -46,6 +50,7 @@ jobs:
       - name: Build Backend
         working-directory: backend
         run: sam build
+
 
       - name: Deploy Backend
         working-directory: backend

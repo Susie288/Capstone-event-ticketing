@@ -41,28 +41,12 @@ sam --version
 
 ---
 
-## Python
-
-Version
-
-```
-Python 3.12
-```
-
-Verify
-
-```bash
-python --version
-```
-
----
-
 ## Node.js
 
 Version
 
 ```
-22+
+20+
 ```
 
 Verify
@@ -130,7 +114,7 @@ cd backend
 ## Install Dependencies
 
 ```bash
-pip install -r requirements.txt
+npm install
 ```
 
 ---

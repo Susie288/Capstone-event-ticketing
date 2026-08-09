@@ -1,1 +1,0 @@
-"""Get events Lambda package."""

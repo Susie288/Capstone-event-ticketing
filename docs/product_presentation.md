@@ -27,7 +27,7 @@ A cloud-native, serverless REST API and web application built on AWS that automa
 
 - **Frontend**: Next.js 15 app hosted in an S3 Bucket (`BucketOwnerEnforced`, Private) and served via Amazon CloudFront CDN with Origin Access Control (OAC).
 - **API Gateway**: HTTP API Gateway with CORS policy, path parameters, and default route rate limiting (`100` burst / `50` req/sec).
-- **Compute**: Python 3.12 AWS Lambda functions (`GetEvents`, `Register`, `GetRegistrations`, `CancelRegistration`).
+- **Compute**: Node.js 20 AWS Lambda functions (`GetEvents`, `Register`, `GetRegistrations`, `CancelRegistration`).
 - **Database**: Amazon DynamoDB with On-Demand Billing (`PAY_PER_REQUEST`).
   - `EventsTable`: Hash key `event_id`
   - `RegistrationsTable`: Hash key `event_id`, Range key `email` + Global Secondary Indexes (`email-index`, `registration-id-index`).
@@ -41,10 +41,10 @@ A cloud-native, serverless REST API and web application built on AWS that automa
    - *Solution*: Utilized DynamoDB `TransactWriteItems` / `ConditionCheckItem` to atomically decrement remaining capacity and insert registration in a single transaction.
 2. **CORS & Public API Security**:
    - *Challenge*: Defending public endpoints against DDoS attacks and cross-origin injection.
-   - *Solution*: Implemented API Gateway rate limiting, strict CORS origins, and input sanitization (`shared/validators.py`) stripping HTML tags and validating input lengths and event ID patterns.
+   - *Solution*: Implemented API Gateway rate limiting, strict CORS origins, and input sanitization (`shared/validators.js`) stripping HTML tags and validating input lengths and event ID patterns.
 3. **Observability Without Overhead**:
    - *Challenge*: Measuring request counts, failure reasons, and handler durations without degrading API latency.
-   - *Solution*: Created a lightweight, lazy-initialized `metrics.py` context manager wrapping Lambda handlers.
+   - *Solution*: Created a lightweight, lazy-initialized `metrics.js` request tracker wrapper around Lambda handlers.
 
 ---
 

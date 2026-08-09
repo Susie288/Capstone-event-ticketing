@@ -8,7 +8,7 @@ The Event Registration & Ticketing System exposes a REST API through Amazon API 
 - Retrieve details for a specific event
 - Register for an event
 
-The backend is built using AWS Lambda and deployed using AWS SAM.
+The backend is built using AWS Lambda (Node.js 20 / JavaScript) and deployed using AWS SAM.
 
 ---
 
