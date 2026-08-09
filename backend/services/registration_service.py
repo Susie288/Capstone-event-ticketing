@@ -46,6 +46,7 @@ class RegistrationService:
 
     def _notify_sns(self, registration: Registration, event_name: str) -> None:
         if not self.topic_arn:
+            log("info", "sns_publish_skipped", reason="REGISTRATION_TOPIC_ARN not set")
             return
         try:
             if self.sns is None:

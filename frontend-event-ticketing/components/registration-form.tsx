@@ -113,12 +113,18 @@ export function RegistrationForm({ events, isLoadingEvents, presetEventId, onSuc
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">
-              Phone number <span className="font-normal text-muted-foreground">(optional)</span>
-            </Label>
+            <Label htmlFor="phone">Phone number</Label>
             <div className="relative">
               <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="phone" type="tel" placeholder="+233 20 000 0000" className="pl-10" aria-invalid={!!errors.phone} {...register("phone")} />
+              <Input
+                id="phone"
+                type="tel"
+                maxLength={10}
+                placeholder="0240000000"
+                className="pl-10"
+                aria-invalid={!!errors.phone}
+                {...register("phone")}
+              />
             </div>
             {errors.phone && <p className="text-xs font-medium text-destructive">{errors.phone.message}</p>}
           </div>

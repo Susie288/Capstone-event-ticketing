@@ -9,10 +9,8 @@ export const registrationSchema = z.object({
   email: z.string().min(1, "Email is required").email("Enter a valid email address"),
   phone: z
     .string()
-    .optional()
-    .refine((val) => !val || /^[+]?[\d\s-()]{7,20}$/.test(val), {
-      message: "Enter a valid phone number",
-    }),
+    .min(1, "Phone number is required")
+    .regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
 });
 
 export type RegistrationFormValues = z.infer<typeof registrationSchema>;

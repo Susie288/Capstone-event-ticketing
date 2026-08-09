@@ -18,7 +18,7 @@ export interface RegistrationPayload {
   eventId: string;
   fullName: string;
   email: string;
-  phone?: string;
+  phone: string;
 }
 
 export interface RegistrationResponse {

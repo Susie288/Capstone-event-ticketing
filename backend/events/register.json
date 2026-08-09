@@ -1,7 +1,6 @@
 {
   "httpMethod": "POST",
   "path": "/register",
-  "body": "{\"eventId\": \"evt-001\", \"fullName\": \"Ada Lovelace\", \"email\": \"ada@example.com\", \"phone\": \"+1 555 0100\"}",
+  "body": "{\"eventId\": \"evt-001\", \"fullName\": \"Susan Darke\", \"email\": \"Susie@example.com\", \"phone\": \"0241234567\"}",
   "isBase64Encoded": false
 }
-

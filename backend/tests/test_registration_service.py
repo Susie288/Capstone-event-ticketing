@@ -27,7 +27,7 @@ class RegistrationServiceTests(unittest.TestCase):
             "event_id": "evt-1",
             "full_name": "John Doe",
             "email": "john@example.com",
-            "phone": "555-1234",
+            "phone": "0241234567",
         })
 
         self.assertEqual(res["status"], "CONFIRMED")
@@ -44,7 +44,7 @@ class RegistrationServiceTests(unittest.TestCase):
 
         service = RegistrationService(event_repository=mock_events)
         with self.assertRaises(EventNotFoundError):
-            service.register({"event_id": "invalid", "full_name": "John", "email": "john@example.com", "phone": ""})
+            service.register({"event_id": "invalid", "full_name": "John", "email": "john@example.com", "phone": "0241234567"})
 
 if __name__ == "__main__":
     unittest.main()

@@ -7,7 +7,7 @@ from typing import Any
 
 
 EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
-PHONE_PATTERN = re.compile(r"^[+]?[-()\\d\\s]{7,20}$")
+PHONE_PATTERN = re.compile(r"^\d{10}$")
 EVENT_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
 HTML_TAG_PATTERN = re.compile(r"<[^>]+>")
 
@@ -67,8 +67,10 @@ def validate_registration(payload: dict[str, Any]) -> dict[str, str]:
         raise ValidationError("fullName must be between 2 and 80 characters.")
     if not EMAIL_PATTERN.fullmatch(email):
         raise ValidationError("email must be a valid email address.")
-    if phone and not PHONE_PATTERN.fullmatch(phone):
-        raise ValidationError("phone must be a valid phone number.")
+    if not phone:
+        raise ValidationError("phone is required.")
+    if not PHONE_PATTERN.fullmatch(phone):
+        raise ValidationError("phone must be a valid 10-digit phone number.")
     return {"event_id": event_id, "full_name": full_name, "email": email, "phone": phone}
 
 
