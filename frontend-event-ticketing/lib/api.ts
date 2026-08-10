@@ -173,6 +173,54 @@ export async function submitRegistration(
 
 
 /**
+ * Fetch registrations by email
+ */
+export async function fetchRegistrations(email: string): Promise<RegistrationResponse[]> {
+  if (!API_BASE_URL) {
+    await simulateLatency();
+    return MOCK_REGISTRATIONS.filter((r) => r.email.toLowerCase() === email.toLowerCase());
+  }
+
+  try {
+    const { data } = await apiClient.get<RegistrationResponse[]>(`/registrations/${encodeURIComponent(email)}`);
+    return data;
+  } catch (error: any) {
+    const message = error.response?.data?.message || error.response?.data?.error || "Failed to load registrations.";
+    throw new Error(message);
+  }
+}
+
+
+/**
+ * Cancel a registration
+ */
+export async function cancelRegistration(id: string): Promise<void> {
+  if (!API_BASE_URL) {
+    await simulateLatency();
+    const reg = MOCK_REGISTRATIONS.find((r) => r.registrationId === id);
+    if (!reg) throw new Error("Registration not found.");
+    if (reg.status === "CANCELLED") throw new Error("Registration is already cancelled.");
+
+    reg.status = "CANCELLED";
+
+    const event = MOCK_EVENTS.find((e) => e.id === reg.eventId);
+    if (event) {
+      event.availableSeats = Math.min(event.totalSeats, event.availableSeats + 1);
+      event.status = calculateEventStatus(event.availableSeats, event.totalSeats);
+    }
+    return;
+  }
+
+  try {
+    await apiClient.delete(`/registration/${encodeURIComponent(id)}`);
+  } catch (error: any) {
+    const message = error.response?.data?.message || error.response?.data?.error || "Failed to cancel registration.";
+    throw new Error(message);
+  }
+}
+
+
+/**
  * Simulates network delay when running frontend without AWS backend.
  */
 function simulateLatency() {

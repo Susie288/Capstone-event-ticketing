@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { href: "#register", label: "Event Registration" },
+  { href: "#manage", label: "Manage Bookings" },
   { href: "#events", label: "Available Events" },
 ];
 

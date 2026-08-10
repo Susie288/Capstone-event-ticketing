@@ -9,6 +9,7 @@ import { SuccessTicket } from "@/components/success-ticket";
 import { EventsSection } from "@/components/events-section";
 import { EventModal } from "@/components/event-modal";
 import { Footer } from "@/components/footer";
+import { ManageTickets } from "@/components/manage-tickets";
 import { useEvents } from "@/hooks/use-events";
 import { EventItem, RegistrationResponse } from "@/types";
 
@@ -95,6 +96,12 @@ export default function Home() {
                 )}
               </AnimatePresence>
             </div>
+          </div>
+        </section>
+
+        <section id="manage" className="container py-12">
+          <div className="mx-auto max-w-5xl">
+            <ManageTickets onTicketCancelled={refetch} />
           </div>
         </section>
 
