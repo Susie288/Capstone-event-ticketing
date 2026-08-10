@@ -3,6 +3,8 @@ import { EventItem, RegistrationPayload, RegistrationResponse } from "@/types";
 import { MOCK_EVENTS } from "@/lib/mock-data";
 import { calculateEventStatus, generateRegistrationId } from "@/lib/utils";
 
+const MOCK_REGISTRATIONS: RegistrationResponse[] = [];
+
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").trim();
 
 export const apiClient = axios.create({
@@ -113,7 +115,7 @@ export async function submitRegistration(
     event.availableSeats = Math.max(0, event.availableSeats - 1);
     event.status = calculateEventStatus(event.availableSeats, event.totalSeats);
 
-    return {
+    const newRegistration: RegistrationResponse = {
       registrationId: generateRegistrationId(),
       eventId: event.id,
       eventName: event.name,
@@ -122,6 +124,9 @@ export async function submitRegistration(
       status: "CONFIRMED",
       createdAt: new Date().toISOString(),
     };
+
+    MOCK_REGISTRATIONS.push(newRegistration);
+    return newRegistration;
   }
 
 

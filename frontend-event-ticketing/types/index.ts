@@ -27,6 +27,6 @@ export interface RegistrationResponse {
   eventName: string;
   fullName: string;
   email: string;
-  status: "CONFIRMED";
+  status: "CONFIRMED" | "CANCELLED";
   createdAt: string;
 }
