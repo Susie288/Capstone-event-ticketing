@@ -61,6 +61,7 @@ jobs:
             --resolve-s3 \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
+            --parameter-overrides AllowedOrigin="https://d25g35p4m0q6e4.cloudfront.net" \
             --region us-east-1
 
       # -------------------------

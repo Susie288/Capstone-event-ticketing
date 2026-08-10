@@ -5,7 +5,7 @@ Description: Serverless infrastructure for the event ticketing system.
 Parameters:
   AllowedOrigin:
     Type: String
-    Default: "https://d1zmqwzh6agine.cloudfront.net"
+    Default: "https://d25g35p4m0q6e4.cloudfront.net"
     Description: Exact frontend origin allowed to call the API.
 
   NotificationEmail:
@@ -359,16 +359,16 @@ Resources:
         - AWSLambdaBasicExecutionRole
 
         - Statement:
-
             Effect: Allow
-
             Action:
-
+              - dynamodb:GetItem
+              - dynamodb:Query
               - dynamodb:UpdateItem
-
+              - dynamodb:TransactWriteItems
             Resource:
-
               - !GetAtt RegistrationsTable.Arn
+              - !Sub '${RegistrationsTable.Arn}/index/registration-id-index'
+              - !GetAtt EventsTable.Arn
 
         - Statement:
             Effect: Allow
