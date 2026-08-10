@@ -381,6 +381,7 @@ Additional documentation is available in the `docs/` directory.
 |----------|-------------|
 | `api-documentation.md` | REST API reference |
 | `deployment-guide.md` | AWS SAM deployment guide |
+| `product_presentation.md` | Product Presentation |
 
 ---
 
