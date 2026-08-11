@@ -214,6 +214,22 @@ Resources:
       Protocol: email
       Endpoint: !Ref NotificationEmail
 
+  # Dedicated SNS topic for CloudWatch alarm notifications (separate from registration emails)
+  AlarmNotificationTopic:
+    Type: AWS::SNS::Topic
+    Condition: HasNotificationEmail
+    Properties:
+      TopicName: !Sub '${AWS::StackName}-alarm-notifications'
+      DisplayName: !Sub '${AWS::StackName} CloudWatch Alarms'
+
+  AlarmEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasNotificationEmail
+    Properties:
+      TopicArn: !Ref AlarmNotificationTopic
+      Protocol: email
+      Endpoint: !Ref NotificationEmail
+
 
   GetEventsFunction:
     Type: AWS::Serverless::Function
@@ -436,6 +452,10 @@ Resources:
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
+      AlarmActions:
+        - !If [HasNotificationEmail, !Ref AlarmNotificationTopic, !Ref AWS::NoValue]
+      OKActions:
+        - !If [HasNotificationEmail, !Ref AlarmNotificationTopic, !Ref AWS::NoValue]
 
   LambdaExecutionErrorAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -453,6 +473,10 @@ Resources:
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
+      AlarmActions:
+        - !If [HasNotificationEmail, !Ref AlarmNotificationTopic, !Ref AWS::NoValue]
+      OKActions:
+        - !If [HasNotificationEmail, !Ref AlarmNotificationTopic, !Ref AWS::NoValue]
 
   FailedRegistrationsAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -467,6 +491,36 @@ Resources:
       Threshold: 5
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
+      AlarmActions:
+        - !If [HasNotificationEmail, !Ref AlarmNotificationTopic, !Ref AWS::NoValue]
+      OKActions:
+        - !If [HasNotificationEmail, !Ref AlarmNotificationTopic, !Ref AWS::NoValue]
+
+  # -----------------------------------------------------------------------
+  # Smoke-test alarm: threshold=0 so it fires on the very first
+  # FailedRegistrations data point — proves end-to-end alarm delivery.
+  # Set to threshold=1 or delete this alarm once confirmed working.
+  # -----------------------------------------------------------------------
+  SmokeTestAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasNotificationEmail
+    Properties:
+      AlarmName: !Sub '${AWS::StackName}-SmokeTestAlarm'
+      AlarmDescription: |
+        SMOKE TEST — fires on the first FailedRegistrations data point.
+        Delete or raise threshold once you have confirmed alarm emails arrive.
+      Namespace: EventTicketingSystem
+      MetricName: FailedRegistrations
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmNotificationTopic
+      OKActions:
+        - !Ref AlarmNotificationTopic
 
   # CloudWatch Dashboard
   SystemMonitoringDashboard:

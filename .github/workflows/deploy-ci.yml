@@ -61,7 +61,9 @@ jobs:
             --resolve-s3 \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
-            --parameter-overrides AllowedOrigin="https://d1zmqwzh6agine.cloudfront.net" \
+            --parameter-overrides \
+              AllowedOrigin="https://d1zmqwzh6agine.cloudfront.net" \
+              NotificationEmail="${{ secrets.NOTIFICATION_EMAIL }}" \
             --region us-east-1
 
       # -------------------------

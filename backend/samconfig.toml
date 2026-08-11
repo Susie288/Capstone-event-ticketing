@@ -7,7 +7,7 @@ s3_prefix = "event-ticketing-system"
 region = "us-east-1"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = 'AllowedOrigin="https://d1zmqwzh6agine.cloudfront.net"'
+parameter_overrides = 'AllowedOrigin="https://d1zmqwzh6agine.cloudfront.net" NotificationEmail="[susiesey022@gmail.com]"'
 image_repositories = []
 
 [default.global.parameters]
