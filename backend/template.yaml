@@ -484,8 +484,14 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ "EventTicketingSystem", "ApiRequestCount", "Status", "Success" ],
-                  [ ".", ".", ".", "Error" ]
+                  [ "EventTicketingSystem", "ApiRequestCount", "FunctionName", "GetEventsFunction", "Status", "Success" ],
+                  [ ".", ".", ".", "GetEventsFunction", ".", "Error" ],
+                  [ ".", ".", ".", "RegisterFunction", ".", "Success" ],
+                  [ ".", ".", ".", "RegisterFunction", ".", "Error" ],
+                  [ ".", ".", ".", "CancelRegistrationFunction", ".", "Success" ],
+                  [ ".", ".", ".", "CancelRegistrationFunction", ".", "Error" ],
+                  [ ".", ".", ".", "GetRegistrationsFunction", ".", "Success" ],
+                  [ ".", ".", ".", "GetRegistrationsFunction", ".", "Error" ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,

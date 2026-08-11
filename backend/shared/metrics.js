@@ -76,9 +76,13 @@ async function trackRequest(functionName, statusCode) {
  * @param {string} reason - Failure reason code.
  */
 async function trackFailedRegistration(reason) {
+  // Emit once with Reason dimension (for detailed dashboard/filtering)
   await emitMetric("FailedRegistrations", 1, "Count", [
     { Name: "Reason", Value: reason },
   ]);
+  // Emit a second dimensionless data point so the CloudWatch alarm
+  // (which has no Dimensions filter) can aggregate all failure reasons.
+  await emitMetric("FailedRegistrations", 1, "Count");
 }
 
 /**
