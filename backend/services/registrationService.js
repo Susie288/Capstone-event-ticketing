@@ -78,7 +78,8 @@ class RegistrationService {
         this.sns = new SNSClient({});
       }
 
-      // Subscribe attendee's email to the SNS topic for email notification & subscription confirmation
+      // Subscribe attendee's email to the SNS topic with a filter policy so they
+      // only receive messages targeted at their email address.
       if (registration.email) {
         try {
           await this.sns.send(
@@ -86,6 +87,11 @@ class RegistrationService {
               TopicArn: this.topicArn,
               Protocol: "email",
               Endpoint: registration.email,
+              Attributes: {
+                FilterPolicy: JSON.stringify({
+                  recipient_email: [registration.email],
+                }),
+              },
             })
           );
           log("info", "sns_subscribed", {
@@ -109,11 +115,19 @@ class RegistrationService {
         `Attendee Phone: ${registration.phone || "N/A"}\n` +
         `Registered At: ${registration.createdAt}\n`;
 
+      // Publish with a MessageAttribute so the filter policy routes this
+      // confirmation only to the registrant's email, not all subscribers.
       await this.sns.send(
         new PublishCommand({
           TopicArn: this.topicArn,
           Subject: `Registration Confirmed: ${eventName}`,
           Message: message,
+          MessageAttributes: {
+            recipient_email: {
+              DataType: "String",
+              StringValue: registration.email,
+            },
+          },
         })
       );
       log("info", "sns_published", { registration_id: registration.registrationId });
